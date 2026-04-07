@@ -1,3 +1,4 @@
+import 'package:beach_app/landingpage.dart';
 import 'package:flutter/material.dart';
 
 import 'loginpage.dart';
@@ -76,11 +77,11 @@ class _MyHomePageState extends State<MyHomePage> {
     Future.delayed(Duration(seconds: 3),() {
 
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
 
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      );
 
     },);
 
@@ -106,14 +107,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              "Beach",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                fontFamily: "cursive",
-              ),
+
+
+            Container(
+              height: 80,
+              width: 80,
+
+              child: Image.asset("assets/beach_icon.png",width: 70,height: 70,fit: BoxFit.fill,),
             ),
           ],
         ),
