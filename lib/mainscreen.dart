@@ -95,6 +95,7 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         CircleAvatar(
+
                           radius: 30,
                           backgroundImage: NetworkImage(
                               "https://picsum.photos/100?${index + 1}"),
