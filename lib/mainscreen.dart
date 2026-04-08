@@ -1,3 +1,4 @@
+import 'package:beach_app/filter.dart';
 import 'package:beach_app/profile.dart';
 import 'package:flutter/material.dart';
 
@@ -57,10 +58,24 @@ class HomeScreen extends StatelessWidget {
             "Beach",
             style: TextStyle(fontFamily: "cursive",color: Colors.white),
           ),
-          actions: const [
+          actions:  [
             Padding(
               padding: EdgeInsets.all(12.0),
-              child: Icon(Icons.filter_alt_outlined,color: Colors.white,size: 25,),
+              child: GestureDetector(
+                child:   Image.asset("assets/filter.png",width: 16,height: 16,fit: BoxFit.fill,) ,
+                onTap: (){
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => FilterScreen()),
+                  );
+
+
+                },
+              )
+
+
+
+
             )
           ],
         ),
@@ -87,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 5),
                         Text(
                           categories[index],
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white,fontSize: 14),
                         )
                       ],
                     ),
@@ -100,6 +115,9 @@ class HomeScreen extends StatelessWidget {
             TabBar(
               isScrollable: true,
               indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+
               tabs: tabs.map((t) => Tab(text: t)).toList(),
             ),
 
@@ -124,7 +142,7 @@ class HomeScreen extends StatelessWidget {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(0),
                                 image: DecorationImage(
                                   image: NetworkImage(images[index]),
                                   fit: BoxFit.cover,
@@ -137,18 +155,17 @@ class HomeScreen extends StatelessWidget {
                               bottom: 5,
                               left: 5,
                               child: Row(
-                                children: const [
-                                  Icon(Icons.visibility,
-                                      color: Colors.white, size: 14),
-                                  SizedBox(width: 3),
-                                  Text("12.4K",
-                                      style: TextStyle(color: Colors.white)),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.favorite,
-                                      color: Colors.white, size: 14),
-                                  SizedBox(width: 3),
-                                  Text("6.4K",
-                                      style: TextStyle(color: Colors.white)),
+                                children: [
+                                  Image.asset("assets/eye.png",width: 15,height: 15,),
+                                  const SizedBox(width: 3),
+                                  const Text("12.4K",
+                                      style: TextStyle(color: Colors.white,fontSize:10 )),
+                                  // SizedBox(width: 8),
+                                  // Icon(Icons.favorite,
+                                  //     color: Colors.white, size: 14),
+                                  // SizedBox(width: 3),
+                                  // Text("6.4K",
+                                  //     style: TextStyle(color: Colors.white)),
                                 ],
                               ),
                             )
@@ -181,13 +198,13 @@ class HomeScreen extends StatelessWidget {
           unselectedItemColor: Colors.grey,
           type: BottomNavigationBarType.fixed,
           items:  [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.add), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ""),
+            BottomNavigationBarItem(icon: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+            BottomNavigationBarItem(icon: Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+            BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+            BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
             BottomNavigationBarItem(icon: GestureDetector(
 
-              child: Icon(Icons.person),
+              child: Image.asset("assets/user.png",width: 16,height: 16,fit: BoxFit.fill,) ,
               onTap: (){
 
                 Navigator.push(

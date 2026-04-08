@@ -101,7 +101,13 @@ class LoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon: Icon(Icons.visibility_off, color: Colors.grey),
+                  suffixIcon: GestureDetector(
+                    child:        Image.asset("assets/eye.png",width: 20,height: 20,) ,
+                  ),
+
+
+
+                //  Icon(Icons.visibility_off, color: Colors.grey),
                   contentPadding: EdgeInsets.symmetric(
                       horizontal: 20, vertical: 18),
                 ),

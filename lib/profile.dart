@@ -13,11 +13,22 @@ class ProfileScreen extends StatelessWidget {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.add_box_outlined), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.video_library), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ""),
+      BottomNavigationBarItem(icon: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+    BottomNavigationBarItem(icon: Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+    BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+    BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+    BottomNavigationBarItem(icon: GestureDetector(
+
+    child: Image.asset("assets/user_selected.png",width: 16,height: 16,fit: BoxFit.fill,) ,
+    onTap: (){
+
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => ProfileScreen()),
+    );
+    },
+    ),label: "")
+
         ],
       ),
 

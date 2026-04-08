@@ -1,3 +1,4 @@
+import 'package:beach_app/profile.dart';
 import 'package:flutter/material.dart';
 
 class FeedScreen extends StatelessWidget {
@@ -32,6 +33,29 @@ class FeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(icon: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+          BottomNavigationBarItem(icon: Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+          BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+          BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+          BottomNavigationBarItem(icon: GestureDetector(
+
+            child: Image.asset("assets/user.png",width: 16,height: 16,fit: BoxFit.fill,) ,
+            onTap: (){
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ProfileScreen()),
+              );
+            },
+          ),label: "")
+        ],
+      ),
       body: SafeArea(
         child: ListView.builder(
           itemCount: posts.length,
@@ -74,10 +98,10 @@ class FeedScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.favorite_border, color: Colors.white),
                       SizedBox(width: 15),
-                      Icon(Icons.chat_bubble_outline,
-                          color: Colors.white),
+                      Image.asset("assets/chat.png",width: 18,height: 18,fit: BoxFit.fill,),
+
                       SizedBox(width: 15),
-                      Icon(Icons.send, color: Colors.white),
+                      Image.asset("assets/send.png",width: 18,height: 18,fit: BoxFit.fill,),
                       Spacer(),
                       Icon(Icons.bookmark_border,
                           color: Colors.white),
