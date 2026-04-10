@@ -2,6 +2,7 @@ import 'package:beach_app/filter.dart';
 import 'package:beach_app/profile.dart';
 import 'package:flutter/material.dart';
 
+import 'countrybottom.dart';
 import 'feedscreen.dart';
 
 
@@ -90,24 +91,41 @@ class HomeScreen extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
+                  return GestureDetector(
 
-                          radius: 30,
-                          backgroundImage: NetworkImage(
-                              "https://picsum.photos/100?${index + 1}"),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          categories[index],
-                          style: const TextStyle(color: Colors.white,fontSize: 14),
-                        )
-                      ],
+                    child:  Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+
+                            radius: 30,
+                            backgroundImage: NetworkImage(
+                                "https://picsum.photos/100?${index + 1}"),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            categories[index],
+                            style: const TextStyle(color: Colors.white,fontSize: 14),
+                          )
+                        ],
+                      ),
                     ),
-                  );
+                    onTap: (){
+
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => CountryBottomSheet(),
+                      );
+                    },
+                  )
+
+
+
+
+                   ;
                 },
               ),
             ),
