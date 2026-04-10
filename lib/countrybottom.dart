@@ -92,6 +92,14 @@ class _CountryBottomSheetState extends State<CountryBottomSheet> {
                   _favChip("India"),
                 ],
               ),
+              SizedBox(height: 10,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _favChip("Australia"),
+                  _favChip("Bahrain"),
+                ],
+              ),
 
               SizedBox(height: 20),
 
@@ -191,31 +199,64 @@ class _CountryBottomSheetState extends State<CountryBottomSheet> {
       {
         c_code="in";
       }
-    else{
+    else if(text.compareTo("Afghanistan")==0){
       c_code="af";
+    }
+    else if(text.compareTo("Australia")==0){
+      c_code="au";
+    }
+    else{
+
+      c_code="bh";
     }
 
 
+      return Container(
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: [
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.grey.shade800),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
 
-          CircleAvatar(
+            /// orange dot
+            Container(
+              width: 15,
+              height: 15,
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                shape: BoxShape.circle,
+              ),
+            ),
 
-            radius: 8,
-            backgroundImage: NetworkImage(
-              "https://flagcdn.com/w40/${c_code}.png",),
-          ),
-          SizedBox(width: 8),
-          Text(text, style: TextStyle(color: Colors.white)),
-        ],
-      ),
-    );
+            SizedBox(width: 8),
+
+            /// country name
+            Text(
+              text,
+              style: TextStyle(color: Colors.white),
+            ),
+
+            SizedBox(width: 8),
+
+            /// flag
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                "https://flagcdn.com/w40/$c_code.png",
+                width: 24,
+                height: 24,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        ),
+      );
+
+
   }
 }
