@@ -1,6 +1,10 @@
+import 'package:beach_app/utilities/Utils.dart';
+import 'package:beach_app/web/ApiServices.dart';
+import 'package:beach_app/web/Apimethodes.dart';
 import 'package:flutter/material.dart';
 
 import 'mainscreen.dart';
+import 'models/SignupModel.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -9,6 +13,31 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   bool isHidden = true;
+
+
+  String countryid="1";
+
+  String state_id="2";
+
+  String selected_country="India";
+  String selected_state="Kerala";
+
+  TextEditingController namecontroller=new TextEditingController();
+
+  TextEditingController usernamecontroller=new TextEditingController();
+
+  TextEditingController phonecontroller=new TextEditingController();
+
+  TextEditingController emailcontroller=new TextEditingController();
+
+  TextEditingController passwordcontroller=new TextEditingController();
+  String passwordError = "",emailError="";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,11 +93,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                _buildTextField("Full Name"),
+                _buildTextField("Full Name",namecontroller),
                 const SizedBox(height: 10),
-                _buildTextField("@Username"),
+                _buildTextField("@Username",usernamecontroller),
                 const SizedBox(height: 10),
-                _buildTextField("Your Email"),
+                _buildTextField("Your Email",emailcontroller),
                 const SizedBox(height: 10),
                 /// COUNTRY + STATE
                 Row(
@@ -114,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(width: 10),
 
                     Expanded(
-                      child: _buildTextField("Phone Number"),
+                      child: _buildTextField("Phone Number",phonecontroller),
                     ),
                   ],
                 ),
@@ -124,6 +153,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 /// PASSWORD FIELD
                 TextField(
                   obscureText: isHidden,
+                  controller: passwordcontroller,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -156,8 +186,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 Align(
                   alignment: Alignment.center,
                   child: Text(
-                    "Min. 8 characters, 1 number & 1 special character.",
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    passwordError.isEmpty
+                        ? "Min. 8 characters, 1 number & 1 special character."
+                        : passwordError,
+                    style: TextStyle(
+                      color: passwordError.isEmpty ? Colors.grey : Colors.red,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
 
@@ -187,11 +222,84 @@ class _SignupScreenState extends State<SignupScreen> {
                      ),
                    ),
                  ),
-                 onTap: (){
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(builder: (context) => HomeScreen()),
-                   );
+                 onTap: () async {
+
+
+                   if(namecontroller.text.trim().isNotEmpty){
+                     if(usernamecontroller.text.trim().isNotEmpty){
+                       if(emailcontroller.text.trim().isNotEmpty && validateEmail(emailcontroller.text.trim())){
+
+                         if(phonecontroller.text.trim().isNotEmpty){
+
+                           if(passwordcontroller.text.trim().isNotEmpty && passwordError==""){
+
+
+
+                             SignupModel user = SignupModel(
+                               name: namecontroller.text,
+                               username: usernamecontroller.text,
+                               email: emailcontroller.text,
+                               phone: phonecontroller.text,
+                               countryId: 1,
+                               stateId: 2,
+                               password: passwordcontroller.text,
+                               confirmPassword: passwordcontroller.text,
+                             );
+
+                             final response =
+                                 await ApiService.postRequest(Apimethodes.register, user.toJson());
+
+
+
+
+
+
+
+                           }
+                           else{
+
+
+                             Utils.showAlertDialog(context, "Password should be Min. 8 characters, 1 number & 1 special character.");
+                           }
+
+                         }
+                         else{
+
+
+                           Utils.showAlertDialog(context, "Enter phone number");
+                         }
+
+                       }
+                       else{
+
+
+                         Utils.showAlertDialog(context, "Enter valid email");
+                       }
+
+
+                     }
+                     else{
+
+
+                       Utils.showAlertDialog(context, "Enter username");
+                     }
+
+
+                   }
+                   else{
+
+
+                     Utils.showAlertDialog(context, "Enter your name");
+                   }
+
+
+
+
+
+                   // Navigator.push(
+                   //   context,
+                   //   MaterialPageRoute(builder: (context) => HomeScreen()),
+                   // );
 
                  },
                )
@@ -206,10 +314,41 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  bool validateEmail(String value) {
+    final emailRegex =
+    RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    bool isvalid=false;
+    if (emailRegex.hasMatch(value)) {
+      emailError = "Please enter a valid email address";
+      isvalid=true;
+
+    }
+    
+    return isvalid;
+  }
+
+  void validatePassword(String value) {
+    final passwordRegex =
+    RegExp(r'^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$');
+
+    setState(() {
+      if (value.isEmpty) {
+        passwordError = "";
+      } else if (!passwordRegex.hasMatch(value)) {
+        passwordError =
+        "Min. 8 characters, 1 number & 1 special character.";
+      } else {
+        passwordError = "";
+      }
+    });
+  }
+
+
   /// 🔹 Reusable TextField
-  Widget _buildTextField(String hint) {
+  Widget _buildTextField(String hint,TextEditingController controller) {
     return TextField(
       style: TextStyle(color: Colors.white),
+      controller: controller,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey),
@@ -232,17 +371,34 @@ class _SignupScreenState extends State<SignupScreen> {
         borderRadius: BorderRadius.circular(30),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton(
+        child: DropdownButton<String>(
+          value: (hint == "Country") ? selected_country : selected_state,
           dropdownColor: Colors.black,
-          hint: Text(hint, style: TextStyle(color: Colors.grey)),
+          hint: Text(
+            hint,
+            style: TextStyle(color: Colors.grey),
+          ),
           icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          items: ["Option 1", "Option 2"]
-              .map((e) => DropdownMenuItem(
-            child: Text(e, style: TextStyle(color: Colors.white)),
+          items: ((hint == "Country")
+              ? ["India", "USA", "UK"]
+              : ["Kerala", "Tamil Nadu", "Karnataka"])
+              .map((e) => DropdownMenuItem<String>(
             value: e,
+            child: Text(
+              e,
+              style: TextStyle(color: Colors.white),
+            ),
           ))
               .toList(),
-          onChanged: (value) {},
+          onChanged: (value) {
+            setState(() {
+              if (hint == "Country") {
+                selected_country = value!;
+              } else {
+                selected_state = value!;
+              }
+            });
+          },
         ),
       ),
     );
