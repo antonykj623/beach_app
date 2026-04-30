@@ -1,4 +1,7 @@
 import 'package:beach_app/landingpage.dart';
+import 'package:beach_app/mainscreen.dart';
+import 'package:beach_app/utilities/Utils.dart';
+import 'package:beach_app/utilities/native_storage.dart';
 import 'package:flutter/material.dart';
 
 import 'loginpage.dart';
@@ -75,14 +78,44 @@ class _MyHomePageState extends State<MyHomePage> {
   gotoNextPage()async
   {
 
+
+    String? v=await NativeStorage.getValue(Utils.token);
+
+
+
     Future.delayed(Duration(seconds: 3),() {
 
 
+      if(v!=null)
+        {
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => WelcomeScreen()),
-      );
+          if(v.toString().trim().isNotEmpty){
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+
+          }
+          else{
+
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => WelcomeScreen()),
+            );
+          }
+
+
+        }
+      else {
+
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        );
+
+
+      }
 
     },);
 

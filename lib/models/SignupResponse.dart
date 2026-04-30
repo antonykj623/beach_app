@@ -1,32 +1,42 @@
 class SignupResponse {
-  bool success;
-  String message;
-  UserData data;
+  final bool success;
+  final String message;
+  final UserData? data; // ✅ nullable
 
   SignupResponse({
     required this.success,
     required this.message,
-    required this.data,
+    this.data,
   });
 
   factory SignupResponse.fromJson(Map<String, dynamic> json) {
     return SignupResponse(
       success: json["success"] ?? false,
       message: json["message"] ?? "",
-      data: UserData.fromJson(json["data"]),
+      data: json["data"] != null
+          ? UserData.fromJson(json["data"])
+          : null, // ✅ safe parsing
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "success": success,
+      "message": message,
+      "data": data?.toJson(),
+    };
   }
 }
 
 class UserData {
-  int userId;
-  String name;
-  String mobile;
-  String profileImage;
-  String username;
-  String email;
-  String token;
-  String createdDate;
+  final int userId;
+  final String name;
+  final String mobile;
+  final String profileImage;
+  final String username;
+  final String email;
+  final String token;
+  final String createdDate;
 
   UserData({
     required this.userId,
@@ -50,5 +60,18 @@ class UserData {
       token: json["token"] ?? "",
       createdDate: json["created_date"] ?? "",
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "user_id": userId,
+      "name": name,
+      "mobile": mobile,
+      "profile_image": profileImage,
+      "username": username,
+      "email": email,
+      "token": token,
+      "created_date": createdDate,
+    };
   }
 }

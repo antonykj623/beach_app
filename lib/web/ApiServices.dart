@@ -79,10 +79,11 @@ class ApiService {
         return jsonDecode(response.body);
 
       case 400:
-        throw Exception("Bad Request");
+        return jsonDecode(response.body);
+
 
       case 401:
-        throw Exception("Unauthorized");
+        return jsonDecode(response.body);
 
       case 404:
         throw Exception("Not Found");

@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 
 class Utils{
 
+
+  static String token="token";
+  static String mobile="mobile";
+
   static String getRandomnumber()
   {
     String a=DateTime.now().microsecondsSinceEpoch.toString();

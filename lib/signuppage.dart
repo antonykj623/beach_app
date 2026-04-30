@@ -1,26 +1,33 @@
 import 'package:beach_app/utilities/Utils.dart';
+import 'package:beach_app/utilities/native_storage.dart';
 import 'package:beach_app/web/ApiServices.dart';
 import 'package:beach_app/web/Apimethodes.dart';
 import 'package:flutter/material.dart';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'mainscreen.dart';
 import 'models/SignupModel.dart';
+import 'models/SignupResponse.dart';
+import 'models/country.dart';
+import 'models/state.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
   _SignupScreenState createState() => _SignupScreenState();
+
+
 }
 
 class _SignupScreenState extends State<SignupScreen> {
   bool isHidden = true;
 
 
-  String countryid="1";
+  String countryid="0";
 
-  String state_id="2";
+  String state_id="0";
 
-  String selected_country="India";
-  String selected_state="Kerala";
+  String selected_country="";
+  String selected_state="";
 
   TextEditingController namecontroller=new TextEditingController();
 
@@ -33,10 +40,20 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController passwordcontroller=new TextEditingController();
   String passwordError = "",emailError="";
 
+  List<Country>countrylist=[];
+  List<StateModel> statemodels=[];
+
+   Country? country_obj;
+   StateModel? stateModel_obj;
+
+
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    fetchCountries();
+
   }
 
   @override
@@ -154,6 +171,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextField(
                   obscureText: isHidden,
                   controller: passwordcontroller,
+                  onChanged: (txt){
+                    validatePassword(txt);
+                  },
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -233,6 +253,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                            if(passwordcontroller.text.trim().isNotEmpty && passwordError==""){
 
+                             Utils.showLoaderDialog(context);
 
 
                              SignupModel user = SignupModel(
@@ -240,8 +261,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                username: usernamecontroller.text,
                                email: emailcontroller.text,
                                phone: phonecontroller.text,
-                               countryId: 1,
-                               stateId: 2,
+                               countryId: int.parse(countryid),
+                               stateId: int.parse(state_id),
                                password: passwordcontroller.text,
                                confirmPassword: passwordcontroller.text,
                              );
@@ -249,6 +270,31 @@ class _SignupScreenState extends State<SignupScreen> {
                              final response =
                                  await ApiService.postRequest(Apimethodes.register, user.toJson());
 
+
+                             Navigator.pop(context);
+
+
+                             SignupResponse result =
+                             SignupResponse.fromJson(response);
+
+                             if(result.success)
+                               {
+
+                                 NativeStorage.setValue(Utils.token, result.data!.token);
+
+
+                                 NativeStorage.setValue(Utils.mobile, result.data!.mobile);
+
+                                 Navigator.push(
+                                   context,
+                                   MaterialPageRoute(builder: (context) => HomeScreen()),
+                                 );
+
+                               }
+                             else{
+
+                               Utils.showAlertDialog(context, result.message);
+                             }
 
 
 
@@ -296,10 +342,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
 
 
-                   // Navigator.push(
-                   //   context,
-                   //   MaterialPageRoute(builder: (context) => HomeScreen()),
-                   // );
+
 
                  },
                )
@@ -313,6 +356,66 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
+
+
+   fetchStates(String countryId) async {
+    final response = await http.get(
+      Uri.parse(
+        ApiService.baseUrl+Apimethodes.states+"?country_id=$countryId",
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+
+      if (jsonData["success"] == true) {
+        List list = jsonData["data"];
+
+        setState(() {
+
+          statemodels.clear();
+
+          statemodels.addAll(list.map((e) => StateModel.fromJson(e)).toList());
+
+          stateModel_obj=statemodels.first;
+
+        });
+
+
+      } else {
+        throw Exception("Failed to load states");
+      }
+    } else {
+      throw Exception("Server error");
+    }
+  }
+
+   fetchCountries() async {
+    final response = await http.get(
+      Uri.parse(ApiService.baseUrl+Apimethodes.country),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+
+      if (jsonData["success"] == true) {
+        List list = jsonData["data"];
+         setState(() {
+           countrylist.clear();
+           countrylist.addAll( list.map((e) => Country.fromJson(e)).toList());
+
+           country_obj=countrylist.first;
+         });
+      } else {
+        throw Exception("API failed");
+      }
+    } else {
+      throw Exception("Server error");
+    }
+  }
+
+
+
 
   bool validateEmail(String value) {
     final emailRegex =
@@ -364,43 +467,110 @@ class _SignupScreenState extends State<SignupScreen> {
 
   /// 🔹 Reusable Dropdown
   Widget _buildDropdown(String hint) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: (hint == "Country") ? selected_country : selected_state,
-          dropdownColor: Colors.black,
-          hint: Text(
-            hint,
-            style: TextStyle(color: Colors.grey),
-          ),
-          icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-          items: ((hint == "Country")
-              ? ["India", "USA", "UK"]
-              : ["Kerala", "Tamil Nadu", "Karnataka"])
-              .map((e) => DropdownMenuItem<String>(
-            value: e,
-            child: Text(
-              e,
-              style: TextStyle(color: Colors.white),
-            ),
-          ))
-              .toList(),
-          onChanged: (value) {
-            setState(() {
-              if (hint == "Country") {
-                selected_country = value!;
-              } else {
-                selected_state = value!;
-              }
-            });
-          },
+
+
+
+    if(hint=="Country") {
+
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(30),
         ),
-      ),
-    );
+
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Country>(
+            isExpanded: true, // 🔥 important
+
+            value: country_obj!=null ? country_obj : null,
+
+            dropdownColor: Colors.black,
+
+            hint: Text(
+              hint,
+              style: TextStyle(color: Colors.grey),
+            ),
+
+            icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+
+            items: countrylist.map((e) {
+              return DropdownMenuItem<Country>(
+                value: e,
+                child: Text(
+                  e.name,
+                  style: TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis, // 🔥 fix overflow
+                ),
+              );
+            }).toList(),
+
+            onChanged: (value) {
+              setState(() {
+                country_obj=value!;
+                selected_country = value!.name;
+                countryid=value!.id.toString();
+
+                fetchStates(countryid);
+              });
+            },
+          ),
+        ),
+      );
+
+    }
+    else{
+
+      return Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: Color(0xFF1C1C1E),
+          borderRadius: BorderRadius.circular(30),
+        ),
+
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<StateModel>(
+            isExpanded: true, // 🔥 important
+
+            value: stateModel_obj!=null ? stateModel_obj : null,
+
+            dropdownColor: Colors.black,
+
+            hint: Text(
+              hint,
+              style: TextStyle(color: Colors.grey),
+            ),
+
+            icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+
+            items: statemodels.map((e) {
+              return DropdownMenuItem<StateModel>(
+                value: e,
+                child: Text(
+                  e.name,
+                  style: TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis, // 🔥 fix overflow
+                ),
+              );
+            }).toList(),
+
+            onChanged: (value) {
+              setState(() {
+                selected_state = value!.name;
+                state_id=value!.id.toString();
+
+                stateModel_obj=value;
+
+
+              });
+            },
+          ),
+        ),
+      );
+
+
+    }
   }
 }
