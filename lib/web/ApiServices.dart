@@ -97,4 +97,45 @@ class ApiService {
         );
     }
   }
+
+
+  /// 🔹 1. Forgot Password (Generate OTP)
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/forgot-password"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email}),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  /// 🔹 2. Verify OTP
+  static Future<Map<String, dynamic>> verifyOtp(String email, int otp) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/verify-otp"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "otp": otp,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+  /// 🔹 3. Reset Password
+  static Future<Map<String, dynamic>> resetPassword(
+      String email, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/reset-password"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "new_password": password,
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
 }

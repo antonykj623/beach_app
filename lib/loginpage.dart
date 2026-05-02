@@ -1,3 +1,4 @@
+import 'package:beach_app/forgotpassword.dart';
 import 'package:beach_app/signuppage.dart';
 import 'package:beach_app/utilities/Utils.dart';
 import 'package:beach_app/utilities/native_storage.dart';
@@ -137,10 +138,24 @@ class _LoginScreenState extends State<LoginScreen> {
               /// FORGOT PASSWORD
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
+                child: TextButton(onPressed: (){
+
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ForgotPasswordScreen(
+                      ),
+                    ),
+                  );
+                }, child:
+
+
+
+                Text(
                   "Forgot password?",
                   style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
+                )),
               ),
 
               Spacer(),

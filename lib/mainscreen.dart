@@ -1,4 +1,5 @@
 import 'package:beach_app/filter.dart';
+import 'package:beach_app/notificationlist.dart';
 import 'package:beach_app/profile.dart';
 import 'package:beach_app/utilities/Utils.dart';
 import 'package:beach_app/utilities/native_storage.dart';
@@ -126,8 +127,24 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
-          leading: const Icon(Icons.notifications_none,
-              color: Colors.white, size: 25),
+          leading: IconButton(onPressed: (){
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => NotificationScreen(
+
+                ),
+              ),
+            );
+
+
+          }, icon:
+
+
+
+          Icon(Icons.notifications_none,
+              color: Colors.white, size: 25)),
           centerTitle: true,
           title: const Text(
             "Beach",
