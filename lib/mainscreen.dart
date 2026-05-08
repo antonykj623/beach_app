@@ -1,16 +1,18 @@
 import 'package:beach_app/filter.dart';
 import 'package:beach_app/notificationlist.dart';
 import 'package:beach_app/profile.dart';
+import 'package:beach_app/search.dart';
 import 'package:beach_app/utilities/Utils.dart';
 import 'package:beach_app/utilities/native_storage.dart';
 import 'package:beach_app/utilities/videoitem.dart';
 import 'package:beach_app/utilities/videoplayer.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'chatlist.dart';
 import 'countrybottom.dart';
+import 'create_post.dart';
 import 'feedscreen.dart';
 import 'models/MediaFeed.dart';
 import 'models/Stories.dart';
@@ -391,22 +393,66 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Image.asset("assets/home.png",
                     width: 16, height: 16),
                 label: ""),
-            BottomNavigationBarItem(
-                icon: Image.asset("assets/search.png",
-                    width: 16, height: 16),
-                label: ""),
-            BottomNavigationBarItem(
-                icon: Image.asset("assets/plus.png",
-                    width: 16, height: 16),
-                label: ""),
-            BottomNavigationBarItem(
-                icon: Image.asset("assets/chat.png",
-                    width: 16, height: 16),
-                label: ""),
-            BottomNavigationBarItem(
-                icon: Image.asset("assets/user.png",
-                    width: 16, height: 16),
-                label: ""),
+            BottomNavigationBarItem(icon: GestureDetector(
+
+              child:Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,)  ,
+              onTap: (){
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SearchScreen()),
+                );
+              },
+            )
+
+
+                , label: ""),
+            BottomNavigationBarItem(icon: GestureDetector(
+
+              child: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,),
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreatePostScreen()),
+                );
+
+              },
+            )
+
+
+                , label: ""),
+
+
+
+            BottomNavigationBarItem(icon: GestureDetector(
+
+              child: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,),
+              onTap: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatListScreen()),
+                );
+
+              },
+            )
+
+
+
+                , label: ""),
+
+
+
+            BottomNavigationBarItem(icon: GestureDetector(
+
+              child: Image.asset("assets/user.png",width: 16,height: 16,fit: BoxFit.fill,) ,
+              onTap: (){
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileScreen()),
+                );
+              },
+            ),label: "")
           ],
         ),
       ),
@@ -428,24 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {});
   }
-  Future<String?> createThumbnail() async {
 
-    final thumb = await VideoThumbnail.thumbnailFile(
-
-      video:
-      "https://www.w3schools.com/html/mov_bbb.mp4",
-
-      imageFormat: ImageFormat.JPEG,
-
-      maxWidth: 300,
-
-      quality: 100,
-    );
-
-
-
-    return thumb;
-  }
 
   fetchStories() async {
 
@@ -453,7 +482,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final url = Uri.parse(
         "https://beach.adpedia.in/api/stories-list?page=1&limit=10");
 
-    final response = await http.get(url,headers: {"Authorization":"Bearer "+v!});
+    final response = await http.get(url,
+
+        headers: {"Authorization":"Bearer "+v!}
+
+
+    );
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);

@@ -131,6 +131,7 @@ class _CreatePostScreenState
         Uri.parse(
           "https://beach.adpedia.in/api/hashtags/search?q=$query",
         ),
+          headers: {"Authorization":"Bearer "+token!}
       );
 
       final data =
@@ -189,7 +190,7 @@ class _CreatePostScreenState
     try {
 
       FilePickerResult? result =
-      await FilePicker.platform.pickFiles(
+      await FilePicker.pickFiles(
 
         type: postType == "photo"
 
@@ -235,7 +236,7 @@ class _CreatePostScreenState
     try {
 
       FilePickerResult? result =
-      await FilePicker.platform.pickFiles(
+      await FilePicker.pickFiles(
 
         type: FileType.image,
       );

@@ -1,11 +1,15 @@
 import 'dart:convert';
 
+import 'package:beach_app/chatlist.dart';
+import 'package:beach_app/create_post.dart';
 import 'package:beach_app/search.dart';
+import 'package:beach_app/updateProfile.dart';
 import 'package:beach_app/utilities/Utils.dart';
 import 'package:beach_app/utilities/native_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import 'followerfollowlist.dart';
 import 'mainscreen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -74,9 +78,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 
     , label: ""),
-    BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-    BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
     BottomNavigationBarItem(icon: GestureDetector(
+
+    child: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,),
+      onTap: (){
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CreatePostScreen()),
+        );
+
+      },
+    )
+
+
+     , label: ""),
+
+
+
+          BottomNavigationBarItem(icon: GestureDetector(
+
+    child: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,),
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ChatListScreen()),
+              );
+
+            },
+    )
+
+
+
+           , label: ""),
+
+
+
+          BottomNavigationBarItem(icon: GestureDetector(
 
     child: Image.asset("assets/user_selected.png",width: 16,height: 16,fit: BoxFit.fill,) ,
     onTap: (){
@@ -87,6 +124,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     },
     ),label: "")
+
+
+
 
         ],
       ),
@@ -141,12 +181,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildStat("00", "Posts"),
-                            _buildStat(
-                                profileData!["followers"].toString(),
-                                "Followers"),
-                            _buildStat(
-                                profileData!["following"].toString(),
-                                "Following"),
+                            GestureDetector(
+
+                              child:
+                              _buildStat(
+                                  profileData!["followers"].toString(),
+                                  "Followers"),
+
+                              onTap: (){
+
+                                Navigator.push(
+
+                                  context,
+
+                                  MaterialPageRoute(
+
+                                    builder: (context) =>
+                                    const FollowersFollowingScreen(
+                                      initialTab: 0,
+                                    ),
+                                  ),
+                                );
+                              },
+
+                            ),
+
+                            GestureDetector(
+
+                              child:      _buildStat(
+                                  profileData!["following"].toString(),
+                                  "Following"),
+                              onTap: (){
+                                Navigator.push(
+
+                                  context,
+
+                                  MaterialPageRoute(
+
+                                    builder: (context) =>
+                                    const FollowersFollowingScreen(
+                                      initialTab: 1,
+                                    ),
+                                  ),
+                                );
+
+                              },
+
+                            )
+
+                       ,
                           ],
                         ),
                       ],
@@ -172,6 +255,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
 
+            SizedBox(height: 10),
+
+            ElevatedButton(
+              onPressed: () {
+
+                Navigator.push(
+
+                  context,
+
+                  MaterialPageRoute(
+
+                    builder: (context) =>
+                   UpdateProfileScreen()
+                  ),
+                );
+
+              },
+
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff1565C0),
+                foregroundColor: Colors.white,
+              ),
+
+              child: const Text("Edit Profile"),
+            ),
             SizedBox(height: 20),
 
             /// 🔲 TABS
