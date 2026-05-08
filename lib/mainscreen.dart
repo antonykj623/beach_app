@@ -3,7 +3,9 @@ import 'package:beach_app/notificationlist.dart';
 import 'package:beach_app/profile.dart';
 import 'package:beach_app/utilities/Utils.dart';
 import 'package:beach_app/utilities/native_storage.dart';
+import 'package:beach_app/utilities/videoitem.dart';
 import 'package:beach_app/utilities/videoplayer.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:flutter/material.dart';
 
 import 'dart:convert';
@@ -194,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         if  (futureStories[index].image!=null) CircleAvatar(
                             radius: 30,
                             backgroundImage: NetworkImage(
-                                "https://picsum.photos/100?${index + 1}"),
+                                futureStories[index].image.toString()),
                           ),
 
                         if(futureStories[index].video!=null)    SizedBox(
@@ -208,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           const SizedBox(height: 5),
                           Text(
-                            categories[index],
+                            futureStories[index].title.toString(),
                             style: const TextStyle(
                                 color: Colors.white, fontSize: 14),
                           )
@@ -247,61 +249,109 @@ class _HomeScreenState extends State<HomeScreen> {
             /// 🔹 GRID VIEW
             Expanded(
               child: loading
-                  ? Center(child: CircularProgressIndicator())
+
+                  ? const Center(
+                child: CircularProgressIndicator(),
+              )
+
                   : GridView.builder(
+
                 padding: const EdgeInsets.all(5),
+
                 gridDelegate:
                 const SliverGridDelegateWithFixedCrossAxisCount(
+
                   crossAxisCount: 3,
+
                   crossAxisSpacing: 5,
+
                   mainAxisSpacing: 5,
+
                   childAspectRatio: 0.7,
                 ),
+
                 itemCount: filteredList.length,
+
                 itemBuilder: (context, index) {
+
                   final item = filteredList[index];
 
                   return GestureDetector(
+
                     child: Stack(
+
                       children: [
 
-                        /// 🔹 MEDIA
+                        /// 🔹 VIDEO
+                        item.type == "video"
+
+                            ? VideoItem(
+                          videoUrl: item.url,
+                        )
+
+                            :
+
+                        /// 🔹 IMAGE
                         Container(
+
                           decoration: BoxDecoration(
+
                             image: DecorationImage(
+
                               image: NetworkImage(item.url),
+
                               fit: BoxFit.cover,
                             ),
                           ),
                         ),
 
-                        /// 🔹 VIDEO ICON
-                        if (item.type == "video")
-                          Center(
-                            child: Icon(
-                              Icons.play_circle_fill,
-                              color: Colors.white,
-                              size: 40,
-                            ),
-                          ),
+                        /// 🔹 PLAY ICON
+                        // if (item.type == "video")
+                        //
+                        //   const Center(
+                        //
+                        //     child: Icon(
+                        //
+                        //       Icons.play_circle_fill,
+                        //
+                        //       color: Colors.white,
+                        //
+                        //       size: 40,
+                        //     ),
+                        //   ),
 
                         /// 🔹 VIEWS
                         Positioned(
+
                           bottom: 5,
+
                           left: 5,
+
                           child: Row(
+
                             children: [
+
                               Image.asset(
+
                                 "assets/eye.png",
+
                                 width: 15,
+
                                 height: 15,
                               ),
+
                               const SizedBox(width: 3),
+
                               const Text(
+
                                 "12.4K",
+
                                 style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10),
+
+                                  color: Colors.white,
+
+                                  fontSize: 10,
+                                ),
                               ),
                             ],
                           ),
@@ -310,9 +360,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     onTap: () {
+
                       Navigator.push(
+
                         context,
+
                         MaterialPageRoute(
+
                           builder: (context) => FeedScreen(),
                         ),
                       );
@@ -321,8 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             )
-
-
           ],
         ),
 
@@ -375,6 +427,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     setState(() {});
+  }
+  Future<String?> createThumbnail() async {
+
+    final thumb = await VideoThumbnail.thumbnailFile(
+
+      video:
+      "https://www.w3schools.com/html/mov_bbb.mp4",
+
+      imageFormat: ImageFormat.JPEG,
+
+      maxWidth: 300,
+
+      quality: 100,
+    );
+
+
+
+    return thumb;
   }
 
   fetchStories() async {

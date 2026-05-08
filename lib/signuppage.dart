@@ -28,6 +28,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String selected_country="";
   String selected_state="";
+  String country_code="";
 
   TextEditingController namecontroller=new TextEditingController();
 
@@ -72,7 +73,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: Row(
                     children: [
                       Expanded(child:   IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pop(context);
+
+
+                        },
                         icon: Icon(Icons.arrow_back_ios, color: Colors.white,size: 25,),
                       ),flex: 1,),
 
@@ -134,7 +139,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 /// PHONE ROW
                 Row(
                   children: [
-                    Container(
+                    (country_code.isNotEmpty)? Container(
                       width: 90,
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
@@ -144,8 +149,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton(
                           dropdownColor: Colors.black,
-                          value: "+91",
-                          items: ["+91", "+1", "+44"]
+                          value: country_code,
+                          items: [country_code]
                               .map((e) => DropdownMenuItem(
                             child: Text(e,
                                 style: TextStyle(color: Colors.white)),
@@ -155,7 +160,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           onChanged: (value) {},
                         ),
                       ),
-                    ),
+                    ):Container(),
 
                     const SizedBox(width: 10),
 
@@ -405,6 +410,7 @@ class _SignupScreenState extends State<SignupScreen> {
            countrylist.addAll( list.map((e) => Country.fromJson(e)).toList());
 
            country_obj=countrylist.first;
+           country_code=country_obj!.country_code;
          });
       } else {
         throw Exception("API failed");
@@ -511,6 +517,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 country_obj=value!;
                 selected_country = value!.name;
                 countryid=value!.id.toString();
+                country_code=value!.country_code;
 
                 fetchStates(countryid);
               });

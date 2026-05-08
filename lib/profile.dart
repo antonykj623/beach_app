@@ -1,6 +1,36 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class ProfileScreen extends StatelessWidget {
+import 'package:beach_app/search.dart';
+import 'package:beach_app/utilities/Utils.dart';
+import 'package:beach_app/utilities/native_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import 'mainscreen.dart';
+
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+
+
+
+
+
+class _ProfileScreenState extends State<ProfileScreen> {
+
+
+  bool isLoading=false;
+  Map<String, dynamic>? profileData={};
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,8 +43,37 @@ class ProfileScreen extends StatelessWidget {
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: [
-      BottomNavigationBarItem(icon: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-    BottomNavigationBarItem(icon: Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
+      BottomNavigationBarItem(icon: GestureDetector(
+
+          child: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,),
+        onTap: (){
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        },
+      )
+
+
+
+       , label: ""),
+
+
+    BottomNavigationBarItem(icon: GestureDetector(
+
+    child:Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,)  ,
+      onTap: (){
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SearchScreen()),
+        );
+      },
+    )
+
+
+    , label: ""),
     BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
     BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
     BottomNavigationBarItem(icon: GestureDetector(
@@ -61,8 +120,9 @@ class ProfileScreen extends StatelessWidget {
                   /// PROFILE IMAGE
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: NetworkImage(
-                        "https://randomuser.me/api/portraits/men/1.jpg"),
+                    backgroundImage: profileData!["profile_image"] != null
+                        ? NetworkImage(profileData!["profile_image"])
+                        : AssetImage("assets/user.png") as ImageProvider,
                   ),
 
                   SizedBox(width: 15),
@@ -72,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("John Kennedy",
+                        Text(   profileData!["name"] ?? "",
                             style: TextStyle(color: Colors.white)),
 
                         SizedBox(height: 8),
@@ -81,8 +141,12 @@ class ProfileScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildStat("00", "Posts"),
-                            _buildStat("03", "Followers"),
-                            _buildStat("00", "Following"),
+                            _buildStat(
+                                profileData!["followers"].toString(),
+                                "Followers"),
+                            _buildStat(
+                                profileData!["following"].toString(),
+                                "Following"),
                           ],
                         ),
                       ],
@@ -99,9 +163,9 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 15),
               child: Row(
                 children: [
-                  _chip("State  Kerala"),
+                  _chip("State ${profileData!["state_id"]}"),
                   SizedBox(width: 8),
-                  _chip("Country  India"),
+                  _chip("Country ${profileData!["country_id"]}"),
                   SizedBox(width: 8),
                   _chip("Saved"),
                 ],
@@ -173,4 +237,30 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+
+  Future<void> getProfile() async {
+    try {
+      String? v=await NativeStorage.getValue(Utils.token);
+      final response = await http.get(
+        Uri.parse("https://beach.adpedia.in/api/profile"),
+          headers: {"Authorization":"Bearer "+v!}
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+
+        if (jsonData["status"] == true) {
+          setState(() {
+            profileData = jsonData["data"];
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
 }
