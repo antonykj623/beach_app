@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:beach_app/chatlist.dart';
 import 'package:beach_app/create_post.dart';
+import 'package:beach_app/create_story.dart';
 import 'package:beach_app/search.dart';
 import 'package:beach_app/updateProfile.dart';
 import 'package:beach_app/utilities/Utils.dart';
@@ -141,7 +142,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.add, color: Colors.white),
+
+                  GestureDetector(
+                    child: Icon(Icons.add, color: Colors.white),
+                    onTap: (){
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CreateStoryScreen()),
+                      );
+                    },
+                  )
+                  ,
                   Text(
                     "Profile",
                     style: TextStyle(color: Colors.white, fontSize: 18),
