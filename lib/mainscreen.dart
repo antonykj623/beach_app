@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:beach_app/filter.dart';
 import 'package:beach_app/notificationlist.dart';
 import 'package:beach_app/profile.dart';
@@ -7,9 +9,8 @@ import 'package:beach_app/utilities/native_storage.dart';
 import 'package:beach_app/utilities/videoitem.dart';
 import 'package:beach_app/utilities/videoplayer.dart';
 import 'package:flutter/material.dart';
-
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+
 import 'chatlist.dart';
 import 'countrybottom.dart';
 import 'create_post.dart';
@@ -25,22 +26,30 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int selectedIndex = 0;
 
+  Map<int, int> postViews = {};
+  /// STORIES
+  List<Story> futureStories = [];
 
-   List<Story> futureStories=[];
-
+  /// FEEDS
   List<MediaModel> mediaList = [];
   List<MediaModel> filteredList = [];
+
   bool loading = true;
-  final List<String> categories = [
-    "World",
-    "Country",
-    "State",
-    "Following",
-    "You"
-  ];
+
+  /// PAGINATION VARIABLES
+  int feedPage = 1;
+  bool feedLoadingMore = false;
+  bool feedHasMore = true;
+
+  int storyPage = 1;
+  bool storyLoadingMore = false;
+  bool storyHasMore = true;
+
+  /// SCROLL CONTROLLERS
+  final ScrollController feedScrollController = ScrollController();
+  final ScrollController storyScrollController = ScrollController();
 
   final List<String> tabs = [
     "All",
@@ -50,20 +59,206 @@ class _HomeScreenState extends State<HomeScreen> {
     "Trending"
   ];
 
-  final List<String> images = [
-    "https://picsum.photos/300/400?1",
-    "https://picsum.photos/300/400?2",
-    "https://picsum.photos/300/400?3",
-    "https://picsum.photos/300/400?4",
-    "https://picsum.photos/300/400?5",
-    "https://picsum.photos/300/400?6",
-    "https://picsum.photos/300/400?7",
-    "https://picsum.photos/300/400?8",
-    "https://picsum.photos/300/400?9",
-    "https://picsum.photos/300/400?10",
-    "https://picsum.photos/300/400?11",
-    "https://picsum.photos/300/400?12",
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    fetchStories();
+    fetchFeeds();
+
+    /// FEED PAGINATION
+    feedScrollController.addListener(() {
+      if (feedScrollController.position.pixels >=
+          feedScrollController.position.maxScrollExtent - 200 &&
+          !feedLoadingMore &&
+          feedHasMore) {
+        fetchFeeds(loadMore: true);
+      }
+    });
+
+    /// STORIES PAGINATION
+    storyScrollController.addListener(() {
+      if (storyScrollController.position.pixels >=
+          storyScrollController.position.maxScrollExtent - 100 &&
+          !storyLoadingMore &&
+          storyHasMore) {
+        fetchStories(loadMore: true);
+      }
+    });
+  }
+
+  Future<void> loadViewCount(int postId) async {
+    try {
+      String? token = await NativeStorage.getValue(Utils.token);
+
+      final response = await http.post(
+        Uri.parse(
+            "https://beach.adpedia.in/api/posts/$postId/view"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+
+        if (jsonData["status"] == true) {
+          setState(() {
+            postViews[postId] = jsonData["view_count"] ?? 0;
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  void dispose() {
+    feedScrollController.dispose();
+    storyScrollController.dispose();
+    super.dispose();
+  }
+
+  /// =========================
+  /// FETCH FEEDS WITH PAGINATION
+  /// =========================
+  Future<void> fetchFeeds({bool loadMore = false}) async {
+    try {
+      if (loadMore) {
+        feedLoadingMore = true;
+      } else {
+        loading = true;
+      }
+
+      setState(() {});
+
+      String? token = await NativeStorage.getValue(Utils.token);
+
+      final response = await http.get(
+        Uri.parse(
+            "https://beach.adpedia.in/api/media/feeds/all?page=$feedPage&limit=10"),
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      final jsonData = jsonDecode(response.body);
+
+      if (jsonData["status"] == 1) {
+        List data = jsonData["data"];
+
+        List<MediaModel> newItems =
+        data.map((e) => MediaModel.fromJson(e)).toList();
+        for (var item in newItems) {
+          loadViewCount(item.id!);
+        }
+
+        setState(() {
+          if (loadMore) {
+            mediaList.addAll(newItems);
+          } else {
+            mediaList = newItems;
+          }
+
+          filteredList = mediaList;
+
+          if (newItems.length < 10) {
+            feedHasMore = false;
+          } else {
+            feedPage++;
+          }
+        });
+      }
+
+      loading = false;
+      feedLoadingMore = false;
+
+      setState(() {});
+    } catch (e) {
+      print(e);
+
+      loading = false;
+      feedLoadingMore = false;
+
+      setState(() {});
+    }
+  }
+
+  /// =========================
+  /// FETCH STORIES WITH PAGINATION
+  /// =========================
+  Future<void> fetchStories({bool loadMore = false}) async {
+    try {
+      if (loadMore) {
+        storyLoadingMore = true;
+      }
+
+      setState(() {});
+
+      String? token = await NativeStorage.getValue(Utils.token);
+
+      final response = await http.get(
+        Uri.parse(
+            "https://beach.adpedia.in/api/stories-list?page=$storyPage&limit=10"),
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+
+        final res = StoriesResponse.fromJson(jsonData);
+
+        if (res.status) {
+          setState(() {
+            if (loadMore) {
+              futureStories.addAll(res.data);
+            } else {
+              futureStories = res.data;
+            }
+
+            if (res.data.length < 10) {
+              storyHasMore = false;
+            } else {
+              storyPage++;
+            }
+          });
+        }
+      }
+
+      storyLoadingMore = false;
+
+      setState(() {});
+    } catch (e) {
+      print(e);
+
+      storyLoadingMore = false;
+
+      setState(() {});
+    }
+  }
+
+  /// =========================
+  /// FILTER MEDIA
+  /// =========================
+  void filterMedia(int index) {
+    if (index == 0) {
+      filteredList = mediaList;
+    } else if (index == 1) {
+      filteredList =
+          mediaList.where((e) => e.type == "image").toList();
+    } else if (index == 2) {
+      filteredList =
+          mediaList.where((e) => e.type == "video").toList();
+    } else {
+      filteredList = mediaList;
+    }
+
+    setState(() {});
+  }
 
   void onBottomNavTap(int index) {
     setState(() {
@@ -73,50 +268,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 4) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProfileScreen()),
+        MaterialPageRoute(builder: (_) => ProfileScreen()),
       );
-    }
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    fetchStories();
-    fetchFeeds();
-
-  }
-
-  Future<void> fetchFeeds() async {
-    try {
-
-      String? v=await NativeStorage.getValue(Utils.token);
-
-
-      final response = await http.get(
-        Uri.parse("https://beach.adpedia.in/api/media/feeds/all?page=1&limit=10"),
-        headers: {"Authorization":"Bearer "+v!}
-      );
-
-      final jsonData = jsonDecode(response.body);
-
-      if (jsonData["status"] == 1) {
-        List data = jsonData["data"];
-
-        setState(() {
-
-          mediaList = data.map((e) => MediaModel.fromJson(e)).toList();
-
-          filteredList = mediaList; // default ALL
-
-        });
-
-        setState(() {
-          loading = false;
-        });
-      }
-    } catch (e) {
-      print(e);
     }
   }
 
@@ -127,33 +280,28 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         backgroundColor: Colors.black,
 
-        /// 🔹 APP BAR
+        /// APP BAR
         appBar: AppBar(
           backgroundColor: Colors.black,
           elevation: 0,
-          leading: IconButton(onPressed: (){
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => NotificationScreen(
-
+          leading: IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => NotificationScreen(),
                 ),
-              ),
-            );
-
-
-          }, icon:
-
-
-
-          Icon(Icons.notifications_none,
-              color: Colors.white, size: 25)),
+              );
+            },
+            icon: const Icon(
+              Icons.notifications_none,
+              color: Colors.white,
+            ),
+          ),
           centerTitle: true,
           title: const Text(
             "Beach",
             style: TextStyle(
-              fontFamily: "cursive",
               color: Colors.white,
             ),
           ),
@@ -170,7 +318,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => FilterScreen()),
+                      builder: (_) => FilterScreen(),
+                    ),
                   );
                 },
               ),
@@ -178,47 +327,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        /// 🔹 BODY
+        /// BODY
         body: Column(
           children: [
-
-            /// 🔹 CATEGORY SCROLL
+            /// STORIES
             SizedBox(
               height: 100,
-              child: (futureStories.length>0)? ListView.builder(
+              child: futureStories.isNotEmpty
+                  ? ListView.builder(
+                controller: storyScrollController,
                 scrollDirection: Axis.horizontal,
                 itemCount: futureStories.length,
                 itemBuilder: (context, index) {
                   return GestureDetector(
-                    child: Padding(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 10),
-                      child: Column(
-                        children: [
-                        if  (futureStories[index].image!=null) CircleAvatar(
-                            radius: 30,
-                            backgroundImage: NetworkImage(
-                                futureStories[index].image.toString()),
-                          ),
-
-                        if(futureStories[index].video!=null)    SizedBox(
-                    height: 200,
-                    child: VideoPlayerWidget(
-                        url: futureStories[index].video!),
-                  ),
-
-
-
-
-                          const SizedBox(height: 5),
-                          Text(
-                            futureStories[index].title.toString(),
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 14),
-                          )
-                        ],
-                      ),
-                    ),
                     onTap: () {
                       showModalBottomSheet(
                         context: context,
@@ -228,130 +349,133 @@ class _HomeScreenState extends State<HomeScreen> {
                             CountryBottomSheet(),
                       );
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10),
+                      child: Column(
+                        children: [
+                          if (futureStories[index].image != null)
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundImage: NetworkImage(
+                                futureStories[index]
+                                    .image
+                                    .toString(),
+                              ),
+                            ),
+
+                          if (futureStories[index].video != null)
+                            SizedBox(
+                              height: 60,
+                              width: 60,
+                              child: VideoPlayerWidget(
+                                url: futureStories[index]
+                                    .video!,
+                              ),
+                            ),
+
+                          const SizedBox(height: 5),
+
+                          Text(
+                            futureStories[index]
+                                .title
+                                .toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                   );
                 },
-              ) : Align(
-                alignment: FractionalOffset.center,
-                child: Text("No stories found",style: TextStyle(fontSize: 14,color: Colors.white),),
+              )
+                  : const Center(
+                child: Text(
+                  "No stories found",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
 
-            /// 🔹 TABS
+            /// TAB BAR
             TabBar(
               isScrollable: true,
               indicatorColor: Colors.white,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              tabs: tabs.map((t) => Tab(text: t)).toList(),
-              onTap: (index) {
-                filterMedia(index);
-              },
+              tabs: tabs.map((e) => Tab(text: e)).toList(),
+              onTap: filterMedia,
             ),
 
-            /// 🔹 GRID VIEW
+            /// GRID
             Expanded(
               child: loading
-
                   ? const Center(
                 child: CircularProgressIndicator(),
               )
-
                   : GridView.builder(
-
+                controller: feedScrollController,
                 padding: const EdgeInsets.all(5),
-
                 gridDelegate:
                 const SliverGridDelegateWithFixedCrossAxisCount(
-
                   crossAxisCount: 3,
-
                   crossAxisSpacing: 5,
-
                   mainAxisSpacing: 5,
-
                   childAspectRatio: 0.7,
                 ),
-
-                itemCount: filteredList.length,
-
+                itemCount: filteredList.length +
+                    (feedLoadingMore ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index == filteredList.length) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
 
                   final item = filteredList[index];
 
                   return GestureDetector(
-
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => FeedScreen(),
+                        ),
+                      );
+                    },
                     child: Stack(
-
                       children: [
-
-                        /// 🔹 VIDEO
                         item.type == "video"
-
                             ? VideoItem(
                           videoUrl: item.url,
                         )
-
-                            :
-
-                        /// 🔹 IMAGE
-                        Container(
-
+                            : Container(
                           decoration: BoxDecoration(
-
                             image: DecorationImage(
-
-                              image: NetworkImage(item.url),
-
+                              image:
+                              NetworkImage(item.url),
                               fit: BoxFit.cover,
                             ),
                           ),
                         ),
 
-                        /// 🔹 PLAY ICON
-                        // if (item.type == "video")
-                        //
-                        //   const Center(
-                        //
-                        //     child: Icon(
-                        //
-                        //       Icons.play_circle_fill,
-                        //
-                        //       color: Colors.white,
-                        //
-                        //       size: 40,
-                        //     ),
-                        //   ),
-
-                        /// 🔹 VIEWS
                         Positioned(
-
                           bottom: 5,
-
                           left: 5,
-
                           child: Row(
-
                             children: [
-
                               Image.asset(
-
                                 "assets/eye.png",
-
                                 width: 15,
-
                                 height: 15,
                               ),
-
                               const SizedBox(width: 3),
-
-                              const Text(
-
-                                "12.4K",
-
+                               Text(
+                                 "${postViews[item.id] ?? 0}"  ,
                                 style: TextStyle(
-
                                   color: Colors.white,
-
                                   fontSize: 10,
                                 ),
                               ),
@@ -360,19 +484,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         )
                       ],
                     ),
-
-                    onTap: () {
-
-                      Navigator.push(
-
-                        context,
-
-                        MaterialPageRoute(
-
-                          builder: (context) => FeedScreen(),
-                        ),
-                      );
-                    },
                   );
                 },
               ),
@@ -380,7 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        /// 🔹 BOTTOM NAV
+        /// BOTTOM NAVIGATION
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: selectedIndex,
           onTap: onBottomNavTap,
@@ -390,121 +501,92 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           items: [
             BottomNavigationBarItem(
-                icon: Image.asset("assets/home.png",
-                    width: 16, height: 16),
-                label: ""),
-            BottomNavigationBarItem(icon: GestureDetector(
+              icon: Image.asset(
+                "assets/home.png",
+                width: 16,
+                height: 16,
+              ),
+              label: "",
+            ),
 
-              child:Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,)  ,
-              onTap: (){
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: Image.asset(
+                  "assets/search.png",
+                  width: 16,
+                  height: 16,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SearchScreen(),
+                    ),
+                  );
+                },
+              ),
+              label: "",
+            ),
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SearchScreen()),
-                );
-              },
-            )
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: Image.asset(
+                  "assets/plus.png",
+                  width: 16,
+                  height: 16,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreatePostScreen(),
+                    ),
+                  );
+                },
+              ),
+              label: "",
+            ),
 
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: Image.asset(
+                  "assets/chat.png",
+                  width: 16,
+                  height: 16,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatListScreen(),
+                    ),
+                  );
+                },
+              ),
+              label: "",
+            ),
 
-                , label: ""),
-            BottomNavigationBarItem(icon: GestureDetector(
-
-              child: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,),
-              onTap: (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreatePostScreen()),
-                );
-
-              },
-            )
-
-
-                , label: ""),
-
-
-
-            BottomNavigationBarItem(icon: GestureDetector(
-
-              child: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,),
-              onTap: (){
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChatListScreen()),
-                );
-
-              },
-            )
-
-
-
-                , label: ""),
-
-
-
-            BottomNavigationBarItem(icon: GestureDetector(
-
-              child: Image.asset("assets/user.png",width: 16,height: 16,fit: BoxFit.fill,) ,
-              onTap: (){
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ProfileScreen()),
-                );
-              },
-            ),label: "")
+            BottomNavigationBarItem(
+              icon: GestureDetector(
+                child: Image.asset(
+                  "assets/user.png",
+                  width: 16,
+                  height: 16,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProfileScreen(),
+                    ),
+                  );
+                },
+              ),
+              label: "",
+            ),
           ],
         ),
       ),
     );
-  }
-
-  void filterMedia(int index) {
-    if (index == 0) {
-      filteredList = mediaList; // ALL
-    } else if (index == 1) {
-      filteredList =
-          mediaList.where((e) => e.type == "image").toList();
-    } else if (index == 2) {
-      filteredList =
-          mediaList.where((e) => e.type == "video").toList();
-    } else {
-      filteredList = mediaList;
-    }
-
-    setState(() {});
-  }
-
-
-  fetchStories() async {
-
-    String? v=await NativeStorage.getValue(Utils.token);
-    final url = Uri.parse(
-        "https://beach.adpedia.in/api/stories-list?page=1&limit=10");
-
-    final response = await http.get(url,
-
-        headers: {"Authorization":"Bearer "+v!}
-
-
-    );
-
-    if (response.statusCode == 200) {
-      final jsonData = jsonDecode(response.body);
-
-      final res = StoriesResponse.fromJson(jsonData);
-
-      if(res.status)
-        {
-
-          setState(() {
-            futureStories.clear();
-            futureStories.addAll(res.data);
-          });
-        }
-
-    } else {
-      throw Exception("Failed to load stories");
-    }
   }
 }

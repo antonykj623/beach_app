@@ -5,15 +5,21 @@ class Assets {
   static const String assetsBeachIcon = 'assets/beach_icon.png';
   static const String assetsBell = 'assets/bell.png';
   static const String assetsChat = 'assets/chat.png';
+  static const String assetsCountry = 'assets/country.png';
   static const String assetsEye = 'assets/eye.png';
   static const String assetsFilter = 'assets/filter.png';
   static const String assetsGoogle = 'assets/google.png';
   static const String assetsHome = 'assets/home.png';
+  static const String assetsPhotos = 'assets/photos.png';
   static const String assetsPlus = 'assets/plus.png';
+  static const String assetsReels = 'assets/reels.png';
   static const String assetsSearch = 'assets/search.png';
   static const String assetsSend = 'assets/send.png';
+  static const String assetsStates = 'assets/states.png';
+  static const String assetsStories = 'assets/stories.png';
   static const String assetsUser = 'assets/user.png';
   static const String assetsUserSelected = 'assets/user_selected.png';
+  static const String assetsWorld = 'assets/world.png';
   static const String fontsGolosTextBold = 'assets/fonts/GolosText-Bold.ttf';
   static const String fontsGolosTextRegular = 'assets/fonts/GolosText-Regular.ttf';
 

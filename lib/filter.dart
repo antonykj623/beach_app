@@ -1,163 +1,876 @@
+import 'dart:convert';
+
 import 'package:beach_app/profile.dart';
+import 'package:beach_app/search.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import 'chatlist.dart';
+import 'create_post.dart';
 
 class FilterScreen extends StatefulWidget {
+  const FilterScreen({super.key});
+
   @override
-  _FilterScreenState createState() => _FilterScreenState();
+  State<FilterScreen> createState() => _FilterScreenState();
 }
 
 class _FilterScreenState extends State<FilterScreen> {
 
+  /// =========================
+  /// SINGLE SELECTION VARIABLES
+  /// =========================
+
   int selectedTab = 0;
 
-  /// toggle selections
-  Map<String, bool> topLikes = {
-    "Photos": false,
-    "Reels": true,
-    "Stories": true,
-  };
+  int selectedType = 1;
 
-  Map<String, bool> topViews = {
-    "Photos": true,
-    "Reels": true,
-    "Stories": true,
-  };
+  int selectedLikes = 1;
+
+  int selectedViews = 0;
+
+  int selectedTopLikes = 1;
+
+  int selectedTopViews = 0;
+
+  int selectedDate = 0;
+
+  bool loading = false;
+
+  final List<String> tabs = [
+    "World",
+    "Country",
+    "States"
+  ];
+
+  final List<String> tabsApi = [
+    "world",
+    "country",
+    "states"
+  ];
+
+  final List<String> tabsimg = [
+    "assets/world.png",
+    "assets/country.png",
+    "assets/states.png"
+  ];
+
+  final List<String> types = [
+    "Photos",
+    "Reels",
+    "Stories"
+  ];
+
+  final List<String> typesApi = [
+    "photos",
+    "reels",
+    "stories"
+  ];
+
+  final List<String> typesimage = [
+    "assets/photos.png",
+    "assets/reels.png",
+    "assets/stories.png"
+  ];
+
+  final List<String> likeOptions = [
+    "1K",
+    "10K",
+    "1K"
+  ];
+
+  final List<String> viewOptions = [
+    "1M",
+    "10k",
+    "1K"
+  ];
+
+  final List<String> dateOptions = [
+    "12 hour",
+    "Dates",
+    "Hours"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    getFilter();
+  }
+
+  /// =========================
+  /// SAVE FILTER API
+  /// =========================
+
+  Future<void> saveFilter() async {
+
+    try {
+
+      setState(() {
+        loading = true;
+      });
+
+      final url = Uri.parse(
+        "https://beach.adpedia.in/api/save-filter",
+      );
+
+      Map<String, dynamic> body = {
+
+        "filter_scope": tabsApi[selectedTab],
+
+        "media_type": typesApi[selectedType],
+
+        "selected_filter": "views",
+
+        "filter_value": viewOptions[selectedViews],
+
+        "date_filter_type": "hours",
+
+        "date_filter_value": 12
+      };
+
+      final response = await http.post(
+
+        url,
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: jsonEncode(body),
+      );
+
+      final jsonData = jsonDecode(response.body);
+
+      setState(() {
+        loading = false;
+      });
+
+      if (jsonData["status"] == true) {
+
+        ScaffoldMessenger.of(context).showSnackBar(
+
+          SnackBar(
+            content: Text(jsonData["message"]),
+          ),
+        );
+      }
+
+    } catch (e) {
+
+      setState(() {
+        loading = false;
+      });
+
+      print(e);
+    }
+  }
+
+  /// =========================
+  /// GET FILTER API
+  /// =========================
+
+  Future<void> getFilter() async {
+
+    try {
+
+      String scope = tabsApi[selectedTab];
+
+      String media = typesApi[selectedType];
+
+      final url = Uri.parse(
+        "https://beach.adpedia.in/api/get-filter/$scope/$media",
+      );
+
+      final response = await http.get(url);
+
+      final jsonData = jsonDecode(response.body);
+
+      if (jsonData["status"] == true) {
+
+        final data = jsonData["data"];
+
+        /// TAB
+
+        selectedTab = tabsApi.indexOf(
+          data["filter_scope"].toString(),
+        );
+
+        /// TYPE
+
+        selectedType = typesApi.indexOf(
+          data["media_type"].toString(),
+        );
+
+        /// VIEWS
+
+        String view = data["filter_value"].toString();
+
+        selectedViews = viewOptions.indexWhere(
+              (e) => e.toLowerCase() == view.toLowerCase(),
+        );
+
+        if (selectedViews == -1) {
+          selectedViews = 0;
+        }
+
+        setState(() {});
+      }
+
+    } catch (e) {
+
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+
       backgroundColor: Colors.black,
 
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+
+        backgroundColor: const Color(0xff1A1A1A),
+
         selectedItemColor: Colors.white,
+
         unselectedItemColor: Colors.grey,
+
         type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(icon: Image.asset("assets/home.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-          BottomNavigationBarItem(icon: Image.asset("assets/search.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-          BottomNavigationBarItem(icon: Image.asset("assets/plus.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-          BottomNavigationBarItem(icon: Image.asset("assets/chat.png",width: 16,height: 16,fit: BoxFit.fill,) , label: ""),
-          BottomNavigationBarItem(icon: GestureDetector(
 
-            child: Image.asset("assets/user.png",width: 16,height: 16,fit: BoxFit.fill,) ,
-            onTap: (){
+        items:  [
 
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
-            },
-          ),label: "")
+
+
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              "assets/home.png",
+              width: 16,
+              height: 16,
+            ),
+            label: "",
+          ),
+
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              child: Image.asset(
+                "assets/search.png",
+                width: 16,
+                height: 16,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SearchScreen(),
+                  ),
+                );
+              },
+            ),
+            label: "",
+          ),
+
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              child: Image.asset(
+                "assets/plus.png",
+                width: 16,
+                height: 16,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CreatePostScreen(),
+                  ),
+                );
+              },
+            ),
+            label: "",
+          ),
+
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              child: Image.asset(
+                "assets/chat.png",
+                width: 16,
+                height: 16,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatListScreen(),
+                  ),
+                );
+              },
+            ),
+            label: "",
+          ),
+
+          BottomNavigationBarItem(
+            icon: GestureDetector(
+              child: Image.asset(
+                "assets/user.png",
+                width: 16,
+                height: 16,
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            label: "",
+          ),
+
+
         ],
       ),
 
       body: SafeArea(
+
         child: Padding(
-          padding: const EdgeInsets.all(16),
+
+          padding: const EdgeInsets.all(14),
+
           child: Column(
+
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
+
             children: [
 
-              /// 🔝 HEADER
+              /// HEADER
+
               Row(
+
                 children: [
 
                   GestureDetector(
-                    child:                   Icon(Icons.arrow_back, color: Colors.white),
-onTap: (){
 
-             Navigator.pop(context);
-},
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text("Filter",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18)),
+                    onTap: () {
+
+                      Navigator.pop(context);
+                    },
+
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 24)
-                ],
-              ),
 
-              SizedBox(height: 20),
+                  const Expanded(
 
-              /// 🌍 TABS
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _tabItem("World", 0),
-                  _tabItem("Country", 1),
-                  _tabItem("States", 2),
-                ],
-              ),
+                    child: Center(
 
-              SizedBox(height: 20),
+                      child: Text(
 
-              /// 📸 TYPE
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _chip("Photos"),
-                  _chip("Reels"),
-                  _chip("Stories"),
-                ],
-              ),
+                        "Filter",
 
-              SizedBox(height: 20),
-
-              /// ❤️ LIKES
-              _sectionTitle("Likes"),
-              SizedBox(height: 4,),
-              _dropdownRow(["1K", "10K", "1K"]),
-
-              SizedBox(height: 15),
-
-              /// 👁 VIEWS
-              _sectionTitle("Views"),
-              SizedBox(height: 4,),
-
-              _dropdownRow(["1M", "10K", "1K"]),
-
-              SizedBox(height: 15),
-
-              /// 🔥 TOP LIKES
-              _sectionTitle("Top Likes"),
-              SizedBox(height: 4,),
-
-              _toggleRow(topLikes),
-
-              SizedBox(height: 15),
-
-              /// 🔥 TOP VIEWS
-              _sectionTitle("Top View"),
-              SizedBox(height: 4,),
-
-              _toggleRow(topViews),
-
-              SizedBox(height: 15),
-
-              /// 📅 DATES
-              _sectionTitle("Dates"),
-              SizedBox(height: 4,),
-
-              _dropdownRow(["12 hour", "Dates", "Dates"]),
-
-              Spacer(),
-
-              /// 🔘 BUTTONS
-              Row(
-                children: [
-                  Expanded(
-                    child: _gradientButton("Save"),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: _clearButton("Clear"),
-                  ),
+
+                  const SizedBox(width: 20),
                 ],
               ),
+
+              const SizedBox(height: 25),
+
+              /// TABS
+
+              Row(
+
+                children: List.generate(
+                  tabs.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedTab = index;
+                          });
+
+                          getFilter();
+                        },
+
+                        child: Container(
+
+                          margin: const EdgeInsets.only(right: 8),
+
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
+
+                          decoration: BoxDecoration(
+
+                            color: const Color(0xff161616),
+
+                            borderRadius:
+                            BorderRadius.circular(30),
+
+                            border: Border.all(
+
+                              color: selectedTab == index
+                                  ? Colors.white
+                                  : Colors.orange,
+                            ),
+                          ),
+
+                          child: Row(
+
+                            mainAxisAlignment:
+                            MainAxisAlignment.center,
+
+                            children: [
+
+                              CircleAvatar(
+
+                                radius: 12,
+
+                                backgroundImage:
+                                AssetImage(
+                                  tabsimg[index],
+                                ),
+                              ),
+
+                              const SizedBox(width: 8),
+
+                              Text(
+
+                                tabs[index],
+
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              /// TYPES
+
+              Row(
+
+                children: List.generate(
+                  types.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedType = index;
+                          });
+
+                          getFilter();
+                        },
+
+                        child: Container(
+
+                          height: 42,
+
+                          margin: const EdgeInsets.only(
+                              right: 8),
+
+                          decoration: BoxDecoration(
+
+                            color: selectedType == index
+                                ? const Color(0xff242424)
+                                : const Color(0xff161616),
+
+                            borderRadius:
+                            BorderRadius.circular(25),
+                          ),
+
+                          child: Row(
+
+                            mainAxisAlignment:
+                            MainAxisAlignment.center,
+
+                            children: [
+
+                              Image.asset(
+                                typesimage[index],
+                                width: 16,
+                                height: 16,
+                                fit: BoxFit.fill,
+                              ),
+
+                              const SizedBox(width: 6),
+
+                              Text(
+
+                                types[index],
+
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              /// LIKES
+
+              const Text(
+                "Likes",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+
+                children: List.generate(
+                  likeOptions.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedLikes = index;
+                          });
+                        },
+
+                        child: _selectionContainer(
+                          text: likeOptions[index],
+                          selected:
+                          selectedLikes == index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// VIEWS
+
+              const Text(
+                "Views",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+
+                children: List.generate(
+                  viewOptions.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedViews = index;
+                          });
+                        },
+
+                        child: _selectionContainer(
+                          text: viewOptions[index],
+                          selected:
+                          selectedViews == index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// TOP LIKES
+
+              const Text(
+                "Top Likes",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+
+                children: List.generate(
+                  types.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedTopLikes = index;
+                          });
+                        },
+
+                        child: _selectionContainer(
+                          text: types[index],
+                          selected:
+                          selectedTopLikes == index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// TOP VIEWS
+
+              const Text(
+                "Top View",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+
+                children: List.generate(
+                  types.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedTopViews = index;
+                          });
+                        },
+
+                        child: _selectionContainer(
+                          text: types[index],
+                          selected:
+                          selectedTopViews == index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// DATES
+
+              const Text(
+                "Dates",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 13,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Row(
+
+                children: List.generate(
+                  dateOptions.length,
+                      (index) {
+
+                    return Expanded(
+
+                      child: GestureDetector(
+
+                        onTap: () {
+
+                          setState(() {
+
+                            selectedDate = index;
+                          });
+                        },
+
+                        child: _selectionContainer(
+                          text: dateOptions[index],
+                          selected:
+                          selectedDate == index,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const Spacer(),
+
+              /// BUTTONS
+
+              Row(
+
+                children: [
+
+                  Expanded(
+
+                    child: GestureDetector(
+
+                      onTap: () {
+
+                        saveFilter();
+                      },
+
+                      child: Container(
+
+                        height: 50,
+
+                        decoration: BoxDecoration(
+
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xffFF3B30),
+                              Color(0xffFF9F0A),
+                            ],
+                          ),
+
+                          borderRadius:
+                          BorderRadius.circular(30),
+                        ),
+
+                        child: Center(
+
+                          child: loading
+
+                              ? const SizedBox(
+
+                            height: 20,
+                            width: 20,
+
+                            child:
+                            CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+
+                              : const Text(
+
+                            "Save",
+
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+
+                    child: GestureDetector(
+
+                      onTap: () {
+
+                        setState(() {
+
+                          selectedLikes = 0;
+                          selectedViews = 0;
+                          selectedTopLikes = 0;
+                          selectedTopViews = 0;
+                          selectedDate = 0;
+                        });
+                      },
+
+                      child: Container(
+
+                        height: 50,
+
+                        decoration: BoxDecoration(
+
+                          color: Colors.white,
+
+                          borderRadius:
+                          BorderRadius.circular(30),
+                        ),
+
+                        child: const Center(
+
+                          child: Text(
+
+                            "Clear",
+
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
             ],
           ),
         ),
@@ -165,141 +878,92 @@ onTap: (){
     );
   }
 
-  /// 🔹 TAB
-  Widget _tabItem(String text, int index) {
-    bool selected = selectedTab == index;
+  /// =========================
+  /// COMMON CONTAINER
+  /// =========================
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedTab = index;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? Colors.white10 : Colors.grey[900],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: selected ? Colors.white : Colors.transparent),
-        ),
-        child: Text(text,
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500)),
-      ),
-    );
-  }
+  Widget _selectionContainer({
 
-  /// 🔹 CHIP
-  Widget _chip(String text) {
+    required String text,
+
+    required bool selected,
+  }) {
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(20),
+
+      height: 45,
+
+      margin: const EdgeInsets.only(right: 8),
+
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
       ),
-      child: Text(text, style: TextStyle(color: Colors.white)),
-    );
-  }
 
-  /// 🔹 SECTION TITLE
-  Widget _sectionTitle(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(title,
-          style: TextStyle(color: Colors.grey, fontSize: 13)),
-    );
-  }
-
-  /// 🔹 DROPDOWN ROW
-  Widget _dropdownRow(List<String> values) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: values.map((e) => _dropdown(e)).toList(),
-    );
-  }
-
-  Widget _dropdown(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(20),
+
+        color: const Color(0xff161616),
+
+        borderRadius:
+        BorderRadius.circular(25),
       ),
+
       child: Row(
+
+        mainAxisAlignment:
+        MainAxisAlignment.spaceBetween,
+
         children: [
-          Text(text, style: TextStyle(color: Colors.white)),
-          Icon(Icons.arrow_drop_down, color: Colors.white),
-        ],
-      ),
-    );
-  }
 
-  /// 🔹 TOGGLE ROW
-  Widget _toggleRow(Map<String, bool> data) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: data.keys.map((key) {
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              data[key] = !data[key]!;
-            });
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  data[key]! ? Icons.check_circle : Icons.circle_outlined,
-                  color: data[key]! ? Colors.orange : Colors.white,
-                  size: 18,
+          Row(
+
+            children: [
+
+              Container(
+
+                width: 18,
+
+                height: 18,
+
+                decoration: BoxDecoration(
+
+                  shape: BoxShape.circle,
+
+                  color: selected
+                      ? Colors.orange
+                      : Colors.white,
                 ),
-                SizedBox(width: 6),
-                Text(key, style: TextStyle(color: Colors.white)),
-              ],
-            ),
+
+                child: selected
+
+                    ? const Icon(
+                  Icons.check,
+                  size: 12,
+                  color: Colors.white,
+                )
+
+                    : null,
+              ),
+
+              const SizedBox(width: 8),
+
+              Text(
+
+                text,
+
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-        );
-      }).toList(),
-    );
-  }
 
-  /// 🔹 SAVE BUTTON
-  Widget _gradientButton(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.orange, Colors.red],
-        ),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Center(
-        child: Text(text,
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold)),
-      ),
-    );
-  }
-
-  /// 🔹 CLEAR BUTTON
-  Widget _clearButton(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Center(
-        child: Text(text,
-            style: TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold)),
+          const Icon(
+            Icons.keyboard_arrow_down,
+            color: Colors.white,
+            size: 18,
+          ),
+        ],
       ),
     );
   }
