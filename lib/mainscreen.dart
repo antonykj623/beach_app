@@ -314,13 +314,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 16,
                   height: 16,
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FilterScreen(),
-                    ),
-                  );
+                onTap: () async {
+
+
+
+                  {
+
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => FilterScreen()),
+                    );
+
+                    if (result != null||result==null) {
+
+                      fetchStories();
+                      fetchFeeds();
+
+
+                    }
+
+
+
+
+
+                  }
+
+
+
+
+
+
+
+
+
+
                 },
               ),
             )

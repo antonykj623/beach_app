@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:beach_app/chatlist.dart';
 import 'package:beach_app/create_post.dart';
 import 'package:beach_app/create_story.dart';
+import 'package:beach_app/loginpage.dart';
 import 'package:beach_app/search.dart';
 import 'package:beach_app/updateProfile.dart';
 import 'package:beach_app/utilities/Utils.dart';
@@ -35,6 +36,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     getProfile();
   }
+
+
+  void showLogoutDialog(BuildContext context) {
+
+    showDialog(
+      context: context,
+      builder: (context) {
+
+        return Dialog(
+
+          backgroundColor: const Color(0xFF1C1C1E),
+
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+
+              children: [
+
+                const Icon(
+                  Icons.logout,
+                  color: Colors.red,
+                  size: 50,
+                ),
+
+                const SizedBox(height: 15),
+
+                const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                const Text(
+                  "Do you really want to logout?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                Row(
+                  children: [
+
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+
+                          Navigator.pop(context);
+
+                        },
+                        child: const Text("Cancel"),
+                      ),
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+
+                          Navigator.pop(context);
+
+                          print("Logout clicked");
+
+NativeStorage.setValue(Utils.token, "");
+NativeStorage.setValue(Utils.mobile, "");
+
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (context) => LoginScreen()),
+                                (Route<
+                                dynamic> route) => false, // Remove all previous routes
+                          );
+
+
+
+                        },
+                        child: const Text("Logout"),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +262,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     "Profile",
                     style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
-                  Icon(Icons.menu, color: Colors.white),
+
+                  GestureDetector(
+
+                    child: const Icon(
+                      Icons.menu,
+                      color: Colors.white,
+                    ),
+
+                    onTapDown: (TapDownDetails details) async {
+
+                      final selected = await showMenu(
+
+                        context: context,
+
+                        position: RelativeRect.fromLTRB(
+                          details.globalPosition.dx,
+                          details.globalPosition.dy,
+                          0,
+                          0,
+                        ),
+
+                        color: const Color(0xFF1C1C1E),
+
+                        items: [
+
+                          const PopupMenuItem(
+                            value: "logout",
+                            child: Text(
+                              "Logout",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      );
+
+                      if (selected == "logout") {
+
+                        print("Logout clicked");
+                        showLogoutDialog(context);
+                      }
+                    },
+                  )
                 ],
               ),
             ),
